@@ -50,9 +50,6 @@ if (isset($options['speedtestcli']) && !empty($options['speedtestcli']))
 }
 $speedtestcli = escapeshellcmd(trim($speedtestcli));
 
-var_dump($speedtestcli);
-exit;
-
 $json = shell_exec($speedtestcli.' --json');
 if (!strstr($json, '{') && !strstr($json, ':') && !strstr($json, '}') && !strstr($json, '"'))
 {
