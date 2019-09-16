@@ -18,6 +18,7 @@ $warndownload = 60;
 $critdownload = 40;
 $warnupload   = 60;
 $critupload   = 40;
+$speedtestcli   = shell_exec('which speedtest');
 
 $longopt = array(
     'warnping:',
@@ -26,6 +27,7 @@ $longopt = array(
     'critdownload:',
     'warnupload:',
     'critupload:',
+    'speedtestcli:',
 );
 $options = getopt("a:b:c:d:e:f:h", $longopt);
 
@@ -42,7 +44,16 @@ if (isset($options['h']))
     exit;
 }
 
-$json = shell_exec('speedtest --json');
+if (isset($options['speedtestcli']) && !empty($options['speedtestcli']))
+{
+    $speedtestcli = $options['speedtestcli'];
+}
+$speedtestcli = escapeshellcmd(trim($speedtestcli));
+
+var_dump($speedtestcli);
+exit;
+
+$json = shell_exec($speedtestcli.' --json');
 if (!strstr($json, '{') && !strstr($json, ':') && !strstr($json, '}') && !strstr($json, '"'))
 {
     echo "CRITICAL: does not looks like JSON o.O";
