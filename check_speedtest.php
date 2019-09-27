@@ -9,6 +9,7 @@ usage and default values:
     --critdownload 40
     --warnupload 60
     --critupload 40
+    --speedtestcli /usr/bin/speedtest
  */
 
 // default values?
@@ -18,7 +19,16 @@ $warndownload = 60;
 $critdownload = 40;
 $warnupload   = 60;
 $critupload   = 40;
-$speedtestcli   = shell_exec('which speedtest');
+
+$options = array(
+    'warnping'     => 60,
+    'critping'     => 90,
+    'warndownload' => 60,
+    'critdownload' => 40,
+    'warnupload'   => 60,
+    'critupload'   => 40,
+    'speedtestcli' => shell_exec('which speedtest')
+);
 
 $longopt = array(
     'warnping:',
@@ -29,27 +39,26 @@ $longopt = array(
     'critupload:',
     'speedtestcli:',
 );
-$options = getopt("a:b:c:d:e:f:h", $longopt);
+$params = getopt("a:b:c:d:e:f:h", $longopt);
 
-if (isset($options['h']))
+if (isset($params['h']))
 {
     echo "usage and default values: "."\n";
     foreach ($longopt as $_opt)
     {
         $_opt = str_replace(':', '', $_opt);
         echo "\t--".$_opt . " ";
-        echo $$_opt;
+        echo $options[$_opt];
         echo "\n";
     }
     exit;
 }
 
-if (isset($options['speedtestcli']) && !empty($options['speedtestcli']))
+if (isset($params['speedtestcli']) && !empty($params['speedtestcli']))
 {
-    $speedtestcli = $options['speedtestcli'];
+    $options['speedtestcli'] = $params['speedtestcli'];
 }
-$speedtestcli = escapeshellcmd(trim($speedtestcli));
-
+$speedtestcli = escapeshellcmd(trim($options['speedtestcli']));
 $json = shell_exec($speedtestcli.' --json');
 if (!strstr($json, '{') && !strstr($json, ':') && !strstr($json, '}') && !strstr($json, '"'))
 {
@@ -82,31 +91,11 @@ if (isset($data['ping']))
     $ping = round((float)$data['ping'], 2);
 }
 
-foreach ($options as $_key => $_val)
+foreach ($params as $_key => $_val)
 {
-    if ($_key == 'warnping')
+    if (strstr($_key, 'warn') || strstr($_key, 'crit'))
     {
-    $warnping     = (float) $_val;
-    }
-    if ($_key == 'critping')
-    {
-    $critping     = (float) $_val;
-    }
-    if ($_key == 'warndownload')
-    {
-    $warndownload = (float) $_val;
-    }
-    if ($_key == 'critdownload')
-    {
-    $critdownload = (float) $_val;
-    }
-    if ($_key == 'warnupload')
-    {
-    $warnupload   = (float) $_val;
-    }
-    if ($_key == 'critupload')
-    {
-    $critupload   = (float) $_val;
+        $options[$_key]     = (float) $_val;
     }
 }
 
@@ -116,41 +105,45 @@ $fu = '';
 
 $status = 'OK';
 // warn
-if ($warnping < $ping)
+if ($options['warnping'] < $ping)
 {
     $fp = '!';
     $status = 'WARNING';
 }
-if ($warndownload > $download)
+if ($options['warndownload'] > $download)
 {
     $fd = '!';
     $status = 'WARNING';
 }
-if ($warnupload > $upload)
+if ($options['warnupload'] > $upload)
 {
     $fu = '!';
     $status = 'WARNING';
 }
 
 // crit
-if ($critping < $ping)
+if ($options['critping'] < $ping)
 {
     $fp = '!';
     $status = 'CRITICAL';
 }
-if ($critdownload > $download)
+if ($options['critdownload'] > $download)
 {
     $fd = '!';
     $status = 'CRITICAL';
 }
-if ($critupload > $upload)
+if ($options['critupload'] > $upload)
 {
     $fu = '!';
     $status = 'CRITICAL';
 }
 
-echo "{$status}: {$fp}Ping {$ping}ms - {$fd}Download {$download} Mbit/s - {$fu}Upload {$upload} Mbit/s | ping={$ping}ms download={$download} upload={$upload}";
+var_dump($options);
+
+echo "{$status}: {$fp}Ping {$ping}ms - {$fd}Download {$download} Mbit/s - {$fu}Upload {$upload} Mbit/s";
+echo " | ping={$ping}ms download={$download} upload={$upload}";
 echo "\n";
+
 if ($status == 'OK')
 {
     exit(0);
