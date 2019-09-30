@@ -138,8 +138,6 @@ if ($options['critupload'] > $upload)
     $status = 'CRITICAL';
 }
 
-var_dump($options);
-
 echo "{$status}: {$fp}Ping {$ping}ms - {$fd}Download {$download} Mbit/s - {$fu}Upload {$upload} Mbit/s";
 echo " | ping={$ping}ms download={$download} upload={$upload}";
 echo "\n";
